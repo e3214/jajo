@@ -1,6 +1,16 @@
 from flask import Flask
 from threading import Thread
+import time
+import asyncio
+import discord
+from discord.ext import commands
+from discord import app_commands
+import os
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+import pytz
 
+# --- KEEP ALIVE (Flask + Thread) ---
 app = Flask('')
 
 @app.route('/')
@@ -16,14 +26,8 @@ def keep_alive():
 
 keep_alive()
 
-import asyncio
-import discord
-from discord.ext import commands
-from discord import app_commands
-import os
-from datetime import datetime, timezone
-from dotenv import load_dotenv
-import pytz
+# --- BLOKADA POWITAŃ PO STARCIE ---
+START_TIME = time.time()
 
 load_dotenv()
 
@@ -140,6 +144,10 @@ def human_created(delta):
 # --- POWITALNIA ---
 @bot.event
 async def on_member_join(member):
+    # Blokada powitań przez pierwsze 15 sekund po starcie bota
+    if time.time() - START_TIME < 15:
+        print("Ignoruję powitanie, bot dopiero się uruchomił.")
+        return
     if member.guild.id != CONFIG["GUILD_ID"]:
         return
 
