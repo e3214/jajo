@@ -131,11 +131,11 @@ def human_delta(delta):
         return f"{hours} godzin temu"
 
 def human_created(delta):
-    hours = int(delta.total_seconds() // 3600)
-    if hours == 1:
-        return "1 godzina temu"
+    months = int(delta.days // 30)
+    if months == 1:
+        return "1 miesiąc temu"
     else:
-        return f"{hours} godzin temu"
+        return f"{months} miesięcy temu"
 
 # --- POWITALNIA ---
 @bot.event
@@ -150,7 +150,7 @@ async def on_member_join(member):
         return
 
     avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
-    pomarancz_logo_url = "https://i.imgur.com/0Q9QZ5F.png"
+    pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"
 
     now = datetime.now(timezone.utc)
     warsaw = pytz.timezone('Europe/Warsaw')
