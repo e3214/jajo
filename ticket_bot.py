@@ -124,38 +124,18 @@ TICKET_CATEGORIES = {
 }
 
 def human_delta(delta):
-    seconds = int(delta.total_seconds())
-    if seconds < 60:
-        return f"{seconds} sekund temu" if seconds != 1 else "1 sekunda temu"
-    minutes = seconds // 60
-    if minutes < 60:
-        return f"{minutes} minut temu" if minutes != 1 else "1 minuta temu"
-    hours = minutes // 60
-    if hours < 24:
-        return f"{hours} godzin temu" if hours != 1 else "1 godzina temu"
-    days = hours // 24
-    if days < 30:
-        return f"{days} dni temu" if days != 1 else "1 dzień temu"
-    months = days // 30
-    if months < 12:
-        return f"{months} miesięcy temu" if months != 1 else "1 miesiąc temu"
-    years = months // 12
-    return f"{years} lat temu" if years != 1 else "1 rok temu"
+    hours = int(delta.total_seconds() // 3600)
+    if hours == 1:
+        return "1 godzina temu"
+    else:
+        return f"{hours} godzin temu"
 
 def human_created(delta):
-    days = delta.days
-    if days == 0:
-        return "dzisiaj"
-    elif days == 1:
-        return "wczoraj"
-    elif days < 30:
-        return f"{days} dni temu"
-    elif days < 365:
-        months = days // 30
-        return f"{months} miesięcy temu" if months != 1 else "1 miesiąc temu"
+    hours = int(delta.total_seconds() // 3600)
+    if hours == 1:
+        return "1 godzina temu"
     else:
-        years = days // 365
-        return f"{years} lat temu" if years != 1 else "1 rok temu"
+        return f"{hours} godzin temu"
 
 # --- POWITALNIA ---
 @bot.event
@@ -170,7 +150,7 @@ async def on_member_join(member):
         return
 
     avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
-    pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"
+    pomarancz_logo_url = "https://i.imgur.com/0Q9QZ5F.png"
 
     now = datetime.now(timezone.utc)
     warsaw = pytz.timezone('Europe/Warsaw')
