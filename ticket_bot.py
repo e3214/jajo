@@ -391,6 +391,19 @@ async def ticket_panel(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed, view=TicketView())
 
+# --- KOMENDA /send ---
+@bot.tree.command(name="send", description="Wyślij dowolną wiadomość przez bota (tylko dla administratorów)")
+@app_commands.describe(message="Treść wiadomości do wysłania")
+async def send(interaction: discord.Interaction, message: str):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("❌ Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        return
+    try:
+        await interaction.channel.send(message)
+        await interaction.response.send_message("✅ Wiadomość została wysłana!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Wystąpił błąd: {e}", ephemeral=True)
+
 if __name__ == "__main__":
     TOKEN = os.environ.get("DISCORD_TOKEN")
     if not TOKEN:
