@@ -28,6 +28,7 @@ keep_alive()
 
 # --- BLOKADA POWITAŃ PO STARCIE ---
 START_TIME = time.time()
+welcomed_users = set()
 
 load_dotenv()
 
@@ -144,12 +145,13 @@ def human_created(delta):
 # --- POWITALNIA ---
 @bot.event
 async def on_member_join(member):
-    # Blokada powitań przez pierwsze 15 sekund po starcie bota
     if time.time() - START_TIME < 15:
-        print("Ignoruję powitanie, bot dopiero się uruchomił.")
         return
     if member.guild.id != CONFIG["GUILD_ID"]:
         return
+    if member.id in welcomed_users:
+        return
+    welcomed_users.add(member.id)
 
     channel_id = 1386060178348179486
     channel = member.guild.get_channel(channel_id)
