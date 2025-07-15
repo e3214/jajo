@@ -150,7 +150,7 @@ async def on_member_join(member):
         return
 
     avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
-    pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"
+    pomarancz_logo_url = "https://i.imgur.com/zkHaVeg.png"
 
     now = datetime.now(timezone.utc)
     warsaw = pytz.timezone('Europe/Warsaw')
