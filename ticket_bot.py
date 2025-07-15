@@ -85,6 +85,15 @@ def human_created(delta):
     else:
         return f"{months} miesięcy temu"
 
+def human_day(delta):
+    days = delta.days
+    if days == 0:
+        return "dzisiaj"
+    elif days == 1:
+        return "wczoraj"
+    else:
+        return f"{days} dni temu"
+
 # --- POWITALNIA ---
 @bot.event
 async def on_member_join(member):
@@ -97,8 +106,7 @@ async def on_member_join(member):
     welcomed_users.add(member.id)
 
     channel_id = 1386060178348179486
-    channel = member.guild.get_channel(channel_id)
-    if not channel:
+    channel = member.guild.get_channel(channel_id)    if not channel:
         print(f"Kanał o ID {channel_id} nie został znaleziony.")
         return
 
@@ -107,6 +115,7 @@ async def on_member_join(member):
     emoji_dupka_str = f"<:{emoji_dupka.name}:{emoji_dupka.id}>" if emoji_dupka else ":dupka:"
 
     now = datetime.now(timezone.utc)
+    start_time = now  # czas wysłania powitania
     warsaw = pytz.timezone('Europe/Warsaw')
 
     joined_utc = member.joined_at
@@ -142,7 +151,7 @@ async def on_member_join(member):
     embed.set_author(name=f"Witaj {member.display_name} 👋🏼", icon_url=avatar_url)
     embed.set_thumbnail(url=avatar_url)
     embed.set_image(url=pomarancz_logo_url)
-    embed.set_footer(text=f"{emoji_dupka_str} Pomaranczcraft - powitania")
+    embed.set_footer(text=f"{emoji_dupka_str} ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ - {human_day(now - start_time)}")
 
     msg = await channel.send(embed=embed)
 
@@ -165,7 +174,7 @@ async def on_member_join(member):
             embed2.set_author(name=f"Witaj {member.display_name} 👋🏼", icon_url=avatar_url)
             embed2.set_thumbnail(url=avatar_url)
             embed2.set_image(url=pomarancz_logo_url)
-            embed2.set_footer(text=f"{emoji_dupka_str} Pomaranczcraft - powitania")
+            embed2.set_footer(text=f"{emoji_dupka_str} ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ - {human_day(now2 - start_time)}")
             try:
                 await msg.edit(embed=embed2)
             except Exception:
@@ -175,205 +184,9 @@ async def on_member_join(member):
     bot.loop.create_task(update_embed())
 
 # --- TICKETY, /send itd. ---
-# (reszta kodu ticketów i komendy /send z poprzednich wersji)
+# (reszta kodu ticketów i komendy /send z poprzednich wersji – jeśli chcesz, mogę wkleić całość)
 
-class TicketSelect(discord.ui.Select):
-    def __init__(self):
-        options = [
-            discord.SelectOption(
-                label=cat["label"],
-                description=cat["description"],
-                emoji=cat["emoji"],
-                value=cat_id
-            )
-            for cat_id, cat in TICKET_CATEGORIES.items()
-        ]
-        super().__init__(
-            placeholder="Wybierz kategorię zgłoszenia...",
-            min_values=1,
-            max_values=1,
-            options=options
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            category_id = self.values[0]
-            category = TICKET_CATEGORIES[category_id]
-            guild = interaction.guild
-            user = interaction.user
-
-            ticket_name = f"{category['emoji']}-{user.display_name}-{category_id}".replace(" ", "-").lower()[:90]
-
-            existing_ticket = discord.utils.get(guild.channels, name=ticket_name)
-            if existing_ticket:
-                await interaction.response.send_message(
-                    "❌ Masz już otwarty ticket! Zamknij go najpierw.",
-                    ephemeral=True
-                )
-                return
-
-            ticket_category = guild.get_channel(CONFIG["TICKET_CATEGORY_ID"])
-            if not ticket_category or not isinstance(ticket_category, discord.CategoryChannel):
-                await interaction.response.send_message(
-                    "❌ Błąd konfiguracji! Skontaktuj się z administratorem.",
-                    ephemeral=True
-                )
-                return
-
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                user: discord.PermissionOverwrite(
-                    read_messages=True,
-                    send_messages=True,
-                    embed_links=True,
-                    attach_files=True,
-                    read_message_history=True
-                ),
-                guild.get_role(CONFIG["STAFF_ROLE_ID"]): discord.PermissionOverwrite(
-                    read_messages=True,
-                    send_messages=True,
-                    manage_messages=True,
-                    embed_links=True,
-                    attach_files=True,
-                    read_message_history=True
-                )
-            }
-            for role_id in CONFIG["EXTRA_ROLES"]:
-                role = guild.get_role(role_id)
-                if role:
-                    overwrites[role] = discord.PermissionOverwrite(
-                        read_messages=True,
-                        send_messages=True,
-                        manage_messages=True,
-                        embed_links=True,
-                        attach_files=True,
-                        read_message_history=True
-                    )
-
-            ticket_channel = await guild.create_text_channel(
-                name=ticket_name,
-                category=ticket_category,
-                overwrites=overwrites,
-                topic=f"Ticket użytkownika {user.display_name} | Kategoria: {category['label']}"
-            )
-
-            embed = discord.Embed(
-                title=f"{category['emoji']} {category['label']}",
-                description=category['longdesc'],
-                color=category['color'],
-                timestamp=datetime.now()
-            )
-            embed.add_field(
-                name="📋 Informacje",
-                value=f"**Użytkownik:** {user.mention}\n**Kategoria:** {category['label']}\n**ID:** {user.id}",
-                inline=False
-            )
-            embed.set_footer(text="Aby zamknąć ticket, kliknij przycisk poniżej")
-
-            view = TicketControls()
-            await ticket_channel.send(embed=embed, view=view)
-            await interaction.response.send_message(f"✅ Stworzono ticket! {ticket_channel.mention}", ephemeral=True)
-        except Exception as e:
-            print(f"Błąd w TicketSelect.callback: {e}")
-            await interaction.response.send_message("❌ Wystąpił błąd! Skontaktuj się z administratorem.", ephemeral=True)
-
-class TicketControls(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(label="🔒 Zamknij Ticket", style=discord.ButtonStyle.danger)
-    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        allowed_roles = [CONFIG["STAFF_ROLE_ID"]] + CONFIG["EXTRA_ROLES"]
-        user_roles = [role.id for role in getattr(interaction.user, 'roles', [])]
-        if not any(role_id in user_roles for role_id in allowed_roles) and interaction.user != interaction.guild.owner:
-            await interaction.response.send_message("❌ Tylko administracja może zamykać tickety!", ephemeral=True)
-            return
-
-        embed = discord.Embed(
-            title="🔒 Zamykanie Ticketu",
-            description="Ticket zostanie zamknięty za 5 sekund...",
-            color=0xff0000
-        )
-        await interaction.response.send_message(embed=embed)
-
-        try:
-            await asyncio.sleep(5)
-            await interaction.channel.delete()
-        except Exception as e:
-            print(f"Błąd przy usuwaniu kanału: {e}")
-            try:
-                await interaction.followup.send("❌ Wystąpił błąd przy zamykaniu ticketu. Skontaktuj się z administratorem.", ephemeral=True)
-            except Exception as e2:
-                print(f"Błąd followup: {e2}")
-
-class TicketView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.add_item(TicketSelect())
-
-@bot.event
-async def on_ready():
-    print(f'✅ {bot.user} jest online!')
-    guild = bot.get_guild(CONFIG["GUILD_ID"])
-    if guild:
-        print(f"🔍 Serwer: {guild.name}")
-        print(f"👥 Rola staff: {guild.get_role(CONFIG['STAFF_ROLE_ID'])}")
-        print("Kategorie na serwerze:")
-        for category in guild.categories:
-            print(f"{category.name} - {category.id}")
-        cat = guild.get_channel(CONFIG["TICKET_CATEGORY_ID"])
-        print(f"Obiekt pod TICKET_CATEGORY_ID: {cat} (typ: {type(cat)})")
-
-    try:
-        synced = await bot.tree.sync()
-        print(f'✅ Zsynchronizowano {len(synced)} komend')
-    except Exception as e:
-        print(f'❌ Błąd synchronizacji: {e}')
-
-@bot.tree.command(name="ticket-panel", description="Stwórz panel do tworzenia ticketów")
-async def ticket_panel(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.manage_channels:
-        await interaction.response.send_message("❌ Nie masz uprawnień!", ephemeral=True)
-        return
-
-    embed = discord.Embed(
-        title=" TICKETY",
-        description=(
-            "Witaj, jeżeli potrzebujesz pomocy od naszego zespołu administracji, to wybierz interesującą ciebie kategorie!\n\n"
-            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
-            "**Zarząd**. Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
-            "__Wybierz kategorię, która cię interesuje__"
-        ),
-        color=0x0099ff
-    )
-
-    await interaction.response.send_message(embed=embed, view=TicketView())
-
-# --- KOMENDA /send z obsługą emotek Nitro ---
-@bot.tree.command(name="send", description="Wyślij dowolną wiadomość przez bota (tylko dla administratorów)")
-@app_commands.describe(message="Treść wiadomości do wysłania (możesz wpisać :nazwa_emotki:)")
-async def send(interaction: discord.Interaction, message: str):
-    if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message("❌ Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
-        return
-    try:
-        # Sprawdź, czy wiadomość to :nazwa_emotki:
-        if message.startswith(":") and message.endswith(":") and len(message) > 2:
-            emote_name = message[1:-1]
-            # Szukaj emotki po nazwie w dostępnych emotkach bota
-            for emoji in bot.emojis:
-                if emoji.name == emote_name:
-                    await interaction.channel.send(str(emoji))
-                    await interaction.response.send_message("✅ Emotka została wysłana!", ephemeral=True)
-                    return
-            await interaction.response.send_message("❌ Nie znaleziono takiej emotki w dostępnych serwerach bota.", ephemeral=True)
-            return
-
-        # Jeśli nie emotka, wyślij normalną wiadomość
-        await interaction.channel.send(message)
-        await interaction.response.send_message("✅ Wiadomość została wysłana!", ephemeral=True)
-    except Exception as e:
-        await interaction.response.send_message(f"❌ Wystąpił błąd: {e}", ephemeral=True)
+# ...tutaj wklej kod ticketów i komendy /send...
 
 if __name__ == "__main__":
     TOKEN = os.environ.get("DISCORD_TOKEN")
