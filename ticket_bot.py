@@ -24,10 +24,14 @@ from discord import app_commands
 import os
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
-import pytz
 
 load_dotenv()
 
+print("🤖 Discord Ticket Bot - Wersja Replit")
+print("=" * 40)
+print("Skrypt się uruchomił!")
+
+# Konfiguracja bota (intents)
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -124,79 +128,6 @@ TICKET_CATEGORIES = {
     }
 }
 
-# --- POWITALNIA ---
-@bot.event
-async def on_member_join(member):
-    guild = member.guild
-    if guild.id == CONFIG["GUILD_ID"]:
-        channel_id = 1386060178348179486
-        channel = guild.get_channel(channel_id)
-        if not channel:
-            print(f"Kanał o ID {channel_id} nie został znaleziony.")
-            return
-
-        avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
-        pomarancz_logo_url = "https://i.imgur.com/0Q9QZ5F.png"
-
-        now = datetime.now(timezone.utc)
-        warsaw = pytz.timezone('Europe/Warsaw')
-
-        # --- Poprawna obsługa strefy czasowej ---
-        joined_utc = member.joined_at
-        if joined_utc.tzinfo is None:
-            joined_utc = joined_utc.replace(tzinfo=timezone.utc)
-        joined_local = joined_utc.astimezone(warsaw)
-
-        created_utc = member.created_at
-        if created_utc.tzinfo is None:
-            created_utc = created_utc.replace(tzinfo=timezone.utc)
-        created_local = created_utc.astimezone(warsaw)
-
-        joined_delta = now - joined_utc
-        created_delta = now - created_utc
-
-        def format_delta(delta, unit):
-            if unit == "godzin":
-                hours = int(delta.total_seconds() // 3600)
-                return f"{hours} godziny temu" if hours != 1 else "1 godzinę temu"
-            if unit == "miesięcy":
-                months = int(delta.days // 30)
-                return f"{months} miesięcy temu" if months != 1 else "1 miesiąc temu"
-            return "?"
-
-        joined_str = format_delta(joined_delta, "godzin")
-        created_str = format_delta(created_delta, "miesięcy")
-
-        member_count = guild.member_count
-
-        if joined_delta < timedelta(hours=24):
-            powitanie_data = f"dzisiaj - {joined_local.strftime('%H:%M')}"
-        elif joined_delta < timedelta(hours=48):
-            powitanie_data = f"wczoraj o {joined_local.strftime('%H:%M')}"
-        else:
-            powitanie_data = joined_local.strftime('%d.%m.%Y o %H:%M')
-
-        powitanie_tekst = (
-            f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
-            f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#1386059827368955934> 🦺\n"
-            f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-            f"`⏰` Dołączono na serwer: {joined_str}\n"
-            f"`📅` Konto zostało stworzone: {created_str}\n\n"
-            f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
-        )
-
-        embed = discord.Embed(
-            description=powitanie_tekst,
-            color=0xffa500
-        )
-        embed.set_author(name=f"Witaj {member.display_name} 👋🏼", icon_url=avatar_url)
-        embed.set_thumbnail(url=avatar_url)
-        embed.set_image(url=pomarancz_logo_url)
-        embed.set_footer(text=f"ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ・{powitanie_data}")
-
-        await channel.send(embed=embed)
-
-# --- TICKETY ---
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
@@ -222,7 +153,8 @@ class TicketSelect(discord.ui.Select):
             guild = interaction.guild
             user = interaction.user
 
-            ticket_name = f"{category['emoji']}-{user.display_name}-{category_id}".replace(" ", "-").lower()[:90]
+            ticket_name = f"{category['emoji']}-{user.display_name}-{category_id}".replace(" ", "-").replace("ł", "l").replace("ś", "s").replace("ć", "c").replace("ń", "n").replace("ó", "o").replace("ż", "z").replace("ź", "z").replace("ą", "a").replace("ę", "e").replace("Ś", "S").replace("Ł", "L").replace("Ć", "C").replace("Ń", "N").replace("Ó", "O").replace("Ż", "Z").replace("Ź", "Z").replace("Ą", "A").replace("Ę", "E").lower()
+            ticket_name = ticket_name[:90]
 
             existing_ticket = discord.utils.get(guild.channels, name=ticket_name)
             if existing_ticket:
@@ -331,6 +263,69 @@ class TicketView(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(TicketSelect())
 
+# --- POWITALNIA ---
+@bot.event
+async def on_member_join(member):
+    guild = member.guild
+    if guild.id == CONFIG["GUILD_ID"]:
+        channel_id = 1386060178348179486
+        channel = guild.get_channel(channel_id)
+        if not channel:
+            print(f"Kanał o ID {channel_id} nie został znaleziony.")
+            return
+
+        # Profilowe użytkownika
+        avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
+
+        # Logo PomaranczCraft (bezpośredni link do obrazka)
+        pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"  # <- tutaj jest bezpośredni link do obrazka/logo
+
+        now = datetime.now(timezone.utc)
+        joined_delta = now - member.joined_at
+        created_delta = now - member.created_at
+
+        def format_delta(delta, unit):
+            if unit == "godzin":
+                hours = int(delta.total_seconds() // 3600)
+                return f"{hours} godziny temu" if hours != 1 else "1 godzinę temu"
+            if unit == "miesięcy":
+                months = int(delta.days // 30)
+                return f"{months} miesięcy temu" if months != 1 else "1 miesiąc temu"
+            return "?"
+
+        joined_str = format_delta(joined_delta, "godzin")
+        created_str = format_delta(created_delta, "miesięcy")
+
+        member_count = guild.member_count
+
+        if joined_delta < timedelta(hours=24):
+            powitanie_data = f"dzisiaj - {member.joined_at.strftime('%H:%M')}"
+        elif joined_delta < timedelta(hours=48):
+            powitanie_data = f"wczoraj o {member.joined_at.strftime('%H:%M')}"
+        else:
+            powitanie_data = member.joined_at.strftime('%d.%m.%Y o %H:%M')
+
+        powitanie_tekst = (
+            f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
+            f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#1386059827368955934> 🦺\n"
+            f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
+            f"`⏰` Dołączono na serwer: {joined_str}\n"
+            f"`📅` Konto zostało stworzone: {created_str}\n\n"
+            f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
+        )
+
+        embed = discord.Embed(
+            description=powitanie_tekst,
+            color=0xffa500  # pomarańczowy
+        )
+        embed.set_author(name=f"Witaj {member.display_name} 👋🏼", icon_url=avatar_url)
+        embed.set_thumbnail(url=avatar_url)  # lewy górny okrągły avatar
+        embed.set_image(url=pomarancz_logo_url)  # duży obrazek na dole
+
+        embed.set_footer(text=f"ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ・{powitanie_data}")
+
+        await channel.send(embed=embed)
+
 @bot.event
 async def on_ready():
     print(f'✅ {bot.user} jest online!')
@@ -371,10 +366,12 @@ async def ticket_panel(interaction: discord.Interaction):
 
 if __name__ == "__main__":
     TOKEN = os.environ.get("DISCORD_TOKEN")
+
     if not TOKEN:
         print("❌ Brak tokenu w zmiennych środowiskowych!")
         exit()
+
     try:
         bot.run(TOKEN)
     except Exception as e:
-        print(f"❌ Błąd: {e}")
+        print(f"❌ Błąd: {e}") 
