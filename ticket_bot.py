@@ -112,8 +112,8 @@ async def on_member_join(member):
         return
 
     # Pobierz emotkę :dupka: z serwera
-    emoji_dupka = discord.utils.get(member.guild.emojis, name="dupka")
-    emoji_dupka_str = f"<:{emoji_dupka.name}:{emoji_dupka.id}>" if emoji_dupka else ":dupka:"
+    emoji_dupka = discord.utils.get(bot.emojis, name="dupka")
+    emoji_dupka_str = str(emoji_dupka) if emoji_dupka else ":dupka:"
 
     now = datetime.now(timezone.utc)
     start_time = now  # czas wysłania powitania
@@ -134,14 +134,18 @@ async def on_member_join(member):
 
     member_count = member.guild.member_count
 
-    powitanie_tekst = (
-        f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
-        f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#{REGULAMIN_CHANNEL_ID}> {emoji_dupka_str}\n"
-        f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-        f"`⏰` Dołączono na serwer: `{human_delta(joined_delta)}`\n"
-        f"`📅` Konto zostało stworzone: `{human_created(created_delta)}`\n\n"
-        f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
-    )
+    def make_powitanie_text(joined_delta, created_delta, now):
+        return (
+            f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
+            f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#{REGULAMIN_CHANNEL_ID}> {emoji_dupka_str}\n"
+            f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
+            f"`⏰` Dołączono na serwer: `{human_delta(joined_delta)}`\n"
+            f"`📅` Konto zostało stworzone: `{human_created(created_delta)}`\n\n"
+            f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
+            f"\n\n{emoji_dupka_str} ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ - {human_day(now - start_time)}"
+        )
+
+    powitanie_tekst = make_powitanie_text(joined_delta, created_delta, now)
 
     embed = discord.Embed(
         description=powitanie_tekst,
@@ -152,8 +156,6 @@ async def on_member_join(member):
     embed.set_author(name=f"Witaj {member.display_name} 👋🏼", icon_url=avatar_url)
     embed.set_thumbnail(url=avatar_url)
     embed.set_image(url=pomarancz_logo_url)
-    embed.set_footer(text=f"{emoji_dupka_str} ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ - {human_day(now - start_time)}")
-#           ^ tu już jest spacja po emotce!
 
     msg = await channel.send(embed=embed)
 
@@ -161,14 +163,7 @@ async def on_member_join(member):
         for _ in range(0, 60):  # aktualizuj przez 60 sekund
             now2 = datetime.now(timezone.utc)
             joined_delta2 = now2 - joined_utc
-            powitanie_tekst2 = (
-                f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
-                f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#{REGULAMIN_CHANNEL_ID}> {emoji_dupka_str}\n"
-                f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-                f"`⏰` Dołączono na serwer: `{human_delta(joined_delta2)}`\n"
-                f"`📅` Konto zostało stworzone: `{human_created(created_delta)}`\n\n"
-                f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
-            )
+            powitanie_tekst2 = make_powitanie_text(joined_delta2, created_delta, now2)
             embed2 = discord.Embed(
                 description=powitanie_tekst2,
                 color=0xffa500
@@ -176,7 +171,6 @@ async def on_member_join(member):
             embed2.set_author(name=f"Witaj {member.display_name} 👋🏼", icon_url=avatar_url)
             embed2.set_thumbnail(url=avatar_url)
             embed2.set_image(url=pomarancz_logo_url)
-            embed2.set_footer(text=f"{emoji_dupka_str} ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ - {human_day(now2 - start_time)}")
             try:
                 await msg.edit(embed=embed2)
             except Exception:
@@ -186,8 +180,6 @@ async def on_member_join(member):
     bot.loop.create_task(update_embed())
 
 # --- TICKETY, /send itd. ---
-# (reszta kodu ticketów i komendy /send z poprzednich wersji)
-
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
