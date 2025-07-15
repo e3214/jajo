@@ -259,7 +259,7 @@ async def on_member_join(member):
         avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
 
         # Logo PomaranczCraft (bezpośredni link do obrazka)
-        pomarancz_logo_url = "https://i.imgur.com/0Q9QZ5F.png"  # <- tutaj jest bezpośredni link do obrazka/logo
+        pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"  # <- tutaj jest bezpośredni link do obrazka/logo
 
         now = datetime.now(timezone.utc)
         joined_delta = now - member.joined_at
