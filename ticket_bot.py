@@ -18,10 +18,10 @@ keep_alive()
 
 import asyncio
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord import app_commands
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 import pytz
 
@@ -125,22 +125,37 @@ TICKET_CATEGORIES = {
 
 def human_delta(delta):
     seconds = int(delta.total_seconds())
-    years, rem = divmod(seconds, 31536000)
-    days, rem = divmod(rem, 86400)
-    hours, rem = divmod(rem, 3600)
-    minutes, seconds = divmod(rem, 60)
-    parts = []
-    if years > 0:
-        parts.append(f"{years} rok" + ("ów" if years > 1 else ""))
-    if days > 0:
-        parts.append(f"{days} dni" if days > 1 else "1 dzień")
-    if hours > 0:
-        parts.append(f"{hours} godzin" if hours > 1 else "1 godzina")
-    if minutes > 0:
-        parts.append(f"{minutes} minut" if minutes > 1 else "1 minuta")
-    if seconds > 0 or not parts:
-        parts.append(f"{seconds} sekund" if seconds > 1 else "1 sekunda")
-    return " i ".join(parts) + " temu"
+    if seconds < 60:
+        return f"{seconds} sekund temu" if seconds != 1 else "1 sekunda temu"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes} minut temu" if minutes != 1 else "1 minuta temu"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours} godzin temu" if hours != 1 else "1 godzina temu"
+    days = hours // 24
+    if days < 30:
+        return f"{days} dni temu" if days != 1 else "1 dzień temu"
+    months = days // 30
+    if months < 12:
+        return f"{months} miesięcy temu" if months != 1 else "1 miesiąc temu"
+    years = months // 12
+    return f"{years} lat temu" if years != 1 else "1 rok temu"
+
+def human_created(delta):
+    days = delta.days
+    if days == 0:
+        return "dzisiaj"
+    elif days == 1:
+        return "wczoraj"
+    elif days < 30:
+        return f"{days} dni temu"
+    elif days < 365:
+        months = days // 30
+        return f"{months} miesięcy temu" if months != 1 else "1 miesiąc temu"
+    else:
+        years = days // 365
+        return f"{years} lat temu" if years != 1 else "1 rok temu"
 
 # --- POWITALNIA ---
 @bot.event
@@ -155,7 +170,7 @@ async def on_member_join(member):
         return
 
     avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
-    pomarancz_logo_url = "https://i.imgur.com/0Q9QZ5F.png"
+    pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"
 
     now = datetime.now(timezone.utc)
     warsaw = pytz.timezone('Europe/Warsaw')
@@ -175,22 +190,12 @@ async def on_member_join(member):
 
     member_count = member.guild.member_count
 
-    def format_created(delta):
-        months = int(delta.days // 30)
-        if months > 0:
-            return f"{months} miesięcy temu"
-        days = delta.days
-        if days > 0:
-            return f"{days} dni temu"
-        return human_delta(delta)
-
-    # Wysyłamy powitanie i aktualizujemy je co sekundę przez minutę
     powitanie_tekst = (
         f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
         f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#1386059827368955934> 🦺\n"
         f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-        f"`⏰` Dołączono na serwer: (odliczanie...)\n"
-        f"`📅` Konto zostało stworzone: ({format_created(created_delta)})\n\n"
+        f"`Dołączył {human_delta(joined_delta)}`\n"
+        f"`Konto utworzone: {human_created(created_delta)}`\n\n"
         f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
     )
 
@@ -209,13 +214,12 @@ async def on_member_join(member):
         for _ in range(0, 60):  # aktualizuj przez 60 sekund
             now2 = datetime.now(timezone.utc)
             joined_delta2 = now2 - joined_utc
-            joined_ago = human_delta(joined_delta2)
             powitanie_tekst2 = (
                 f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
                 f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#1386059827368955934> 🦺\n"
                 f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-                f"`⏰` Dołączono na serwer: ({joined_ago})\n"
-                f"`📅` Konto zostało stworzone: ({format_created(created_delta)})\n\n"
+                f"`Dołączył {human_delta(joined_delta2)}`\n"
+                f"`Konto utworzone: {human_created(created_delta)}`\n\n"
                 f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
             )
             embed2 = discord.Embed(
