@@ -170,7 +170,7 @@ async def on_member_join(member):
         return
 
     avatar_url = member.display_avatar.url if member.display_avatar else member.avatar.url
-    pomarancz_logo_url = "https://i.imgur.com/luNVRdn.jpeg"
+    pomarancz_logo_url = "https://i.imgur.com/0Q9QZ5F.png"
 
     now = datetime.now(timezone.utc)
     warsaw = pytz.timezone('Europe/Warsaw')
@@ -194,8 +194,8 @@ async def on_member_join(member):
         f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
         f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#1386059827368955934> 🦺\n"
         f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-        f"`Dołączył {human_delta(joined_delta)}`\n"
-        f"`Konto utworzone: {human_created(created_delta)}`\n\n"
+        f"`⏰` Dołączono na serwer: `{human_delta(joined_delta)}`\n"
+        f"`📅` Konto zostało stworzone: `{human_created(created_delta)}`\n\n"
         f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
     )
 
@@ -218,8 +218,8 @@ async def on_member_join(member):
                 f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
                 f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#1386059827368955934> 🦺\n"
                 f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
-                f"`Dołączył {human_delta(joined_delta2)}`\n"
-                f"`Konto utworzone: {human_created(created_delta)}`\n\n"
+                f"`⏰` Dołączono na serwer: `{human_delta(joined_delta2)}`\n"
+                f"`📅` Konto zostało stworzone: `{human_created(created_delta)}`\n\n"
                 f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
             )
             embed2 = discord.Embed(
