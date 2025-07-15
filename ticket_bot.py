@@ -153,6 +153,7 @@ async def on_member_join(member):
     embed.set_thumbnail(url=avatar_url)
     embed.set_image(url=pomarancz_logo_url)
     embed.set_footer(text=f"{emoji_dupka_str} ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ - ᴘᴏᴡɪᴛᴀɴɪᴀ - {human_day(now - start_time)}")
+#           ^ tu już jest spacja po emotce!
 
     msg = await channel.send(embed=embed)
 
