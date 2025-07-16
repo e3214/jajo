@@ -61,7 +61,7 @@ TICKET_CATEGORIES = {
         "label": "Zgłoś użytkownika",
         "description": "Kliknij jeśli chcesz zgłosić użytkownika",
         "emoji": "⚠️",
-        "color": 0x2ecc40,  # zielony
+        "color": 0xffa500,  # pomarańczowy
         "longdesc": (
             "Witaj! Jeżeli chcesz zgłosić użytkownika łamiącego regulamin, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -74,7 +74,7 @@ TICKET_CATEGORIES = {
         "label": "Backup",
         "description": "Kliknij jeśli chcesz backup",
         "emoji": "💾",
-        "color": 0x2ecc40,
+        "color": 0xffa500,
         "longdesc": (
             "Witaj! Jeżeli potrzebujesz backupu swojej działki, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -87,7 +87,7 @@ TICKET_CATEGORIES = {
         "label": "Zapomniane hasło",
         "description": "Kliknij jeśli chcesz odzyskać hasło",
         "emoji": "🔐",
-        "color": 0x2ecc40,
+        "color": 0xffa500,
         "longdesc": (
             "Witaj! Jeżeli zapomniałeś hasła do konta, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -100,7 +100,7 @@ TICKET_CATEGORIES = {
         "label": "Odwołanie od kary",
         "description": "Kliknij jeśli chcesz się odwołać od kary",
         "emoji": "🛡️",
-        "color": 0x2ecc40,
+        "color": 0xffa500,
         "longdesc": (
             "Witaj! Jeżeli chcesz się odwołać od bana lub mute, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -113,7 +113,7 @@ TICKET_CATEGORIES = {
         "label": "Problem z płatnością",
         "description": "Kliknij jeśli masz problem z płatnością",
         "emoji": "💳",
-        "color": 0x2ecc40,
+        "color": 0xffa500,
         "longdesc": (
             "Witaj! Jeżeli masz problem z płatnością lub zakupem, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -126,7 +126,7 @@ TICKET_CATEGORIES = {
         "label": "Inne",
         "description": "Inne sprawy",
         "emoji": "❓",
-        "color": 0x2ecc40,
+        "color": 0xffa500,
         "longdesc": (
             "Witaj! Jeżeli Twoja sprawa nie pasuje do żadnej z powyższych kategorii, wybierz tę opcję.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -298,6 +298,13 @@ async def create_ticket(interaction: discord.Interaction, kategoria: str):
     if not category or not isinstance(category, discord.CategoryChannel):
         await interaction.response.send_message("Nie znaleziono kategorii ticketów.", ephemeral=True)
         return
+
+    # Sprawdź, czy użytkownik ma już otwarty ticket
+    for channel in category.text_channels:
+        if channel.name.startswith("🎫-") and f"-{interaction.user.name}-" in channel.name:
+            await interaction.response.send_message("Masz już otwarty ticket! Zamknij go, aby utworzyć nowy.", ephemeral=True)
+            return
+
     staff_role = interaction.guild.get_role(CONFIG["STAFF_ROLE_ID"])
     overwrites = {
         interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -319,7 +326,7 @@ async def create_ticket(interaction: discord.Interaction, kategoria: str):
     embed = discord.Embed(
         title=f"{cat['emoji']} {cat['label']}",
         description=cat['longdesc'],
-        color=0x2ecc40,  # zielony
+        color=0xffa500,  # pomarańczowy
         timestamp=datetime.now()
     )
     embed.add_field(
@@ -346,7 +353,7 @@ async def ticket_panel(interaction: discord.Interaction):
             "**Zarząd**. Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Wybierz kategorię, która cię interesuje__"
         ),
-        color=0x2ecc40  # zielony
+        color=0xffa500  # pomarańczowy
     )
 
     await interaction.response.send_message(embed=embed, view=TicketView())
