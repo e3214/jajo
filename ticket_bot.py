@@ -56,12 +56,14 @@ CONFIG = {
 REGULAMIN_CHANNEL_ID = 1386059827368955934  # ID kanału regulaminu
 POWITANIA_CHANNEL_ID = 1386060178348179486  # ID kanału powitań
 
+TICKET_COLOR = 0xffa500  # Pomarańczowy
+
 TICKET_CATEGORIES = {
     "report_user": {
         "label": "Zgłoś użytkownika",
         "description": "Kliknij jeśli chcesz zgłosić użytkownika",
         "emoji": "⚠️",
-        "color": 0xffa500,  # pomarańczowy
+        "color": TICKET_COLOR,
         "longdesc": (
             "Witaj! Jeżeli chcesz zgłosić użytkownika łamiącego regulamin, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -74,7 +76,7 @@ TICKET_CATEGORIES = {
         "label": "Backup",
         "description": "Kliknij jeśli chcesz backup",
         "emoji": "💾",
-        "color": 0xffa500,
+        "color": TICKET_COLOR,
         "longdesc": (
             "Witaj! Jeżeli potrzebujesz backupu swojej działki, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -87,7 +89,7 @@ TICKET_CATEGORIES = {
         "label": "Zapomniane hasło",
         "description": "Kliknij jeśli chcesz odzyskać hasło",
         "emoji": "🔐",
-        "color": 0xffa500,
+        "color": TICKET_COLOR,
         "longdesc": (
             "Witaj! Jeżeli zapomniałeś hasła do konta, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -100,7 +102,7 @@ TICKET_CATEGORIES = {
         "label": "Odwołanie od kary",
         "description": "Kliknij jeśli chcesz się odwołać od kary",
         "emoji": "🛡️",
-        "color": 0xffa500,
+        "color": TICKET_COLOR,
         "longdesc": (
             "Witaj! Jeżeli chcesz się odwołać od bana lub mute, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -113,7 +115,7 @@ TICKET_CATEGORIES = {
         "label": "Problem z płatnością",
         "description": "Kliknij jeśli masz problem z płatnością",
         "emoji": "💳",
-        "color": 0xffa500,
+        "color": TICKET_COLOR,
         "longdesc": (
             "Witaj! Jeżeli masz problem z płatnością lub zakupem, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -126,7 +128,7 @@ TICKET_CATEGORIES = {
         "label": "Inne",
         "description": "Inne sprawy",
         "emoji": "❓",
-        "color": 0xffa500,
+        "color": TICKET_COLOR,
         "longdesc": (
             "Witaj! Jeżeli Twoja sprawa nie pasuje do żadnej z powyższych kategorii, wybierz tę opcję.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
@@ -299,9 +301,9 @@ async def create_ticket(interaction: discord.Interaction, kategoria: str):
         await interaction.response.send_message("Nie znaleziono kategorii ticketów.", ephemeral=True)
         return
 
-    # Sprawdź, czy użytkownik ma już otwarty ticket
+    # Sprawdź, czy użytkownik ma już otwarty ticket (po user.id w topic)
     for channel in category.text_channels:
-        if channel.name.startswith("🎫-") and f"-{interaction.user.name}-" in channel.name:
+        if channel.topic and f"USERID:{interaction.user.id}" in channel.topic:
             await interaction.response.send_message("Masz już otwarty ticket! Zamknij go, aby utworzyć nowy.", ephemeral=True)
             return
 
@@ -321,12 +323,13 @@ async def create_ticket(interaction: discord.Interaction, kategoria: str):
     ticket_channel = await interaction.guild.create_text_channel(
         name=f"🎫-{interaction.user.name}-{cat['slug']}",
         category=category,
-        overwrites=overwrites
+        overwrites=overwrites,
+        topic=f"Ticket użytkownika {interaction.user} | USERID:{interaction.user.id}"
     )
     embed = discord.Embed(
         title=f"{cat['emoji']} {cat['label']}",
         description=cat['longdesc'],
-        color=0xffa500,  # pomarańczowy
+        color=TICKET_COLOR,
         timestamp=datetime.now()
     )
     embed.add_field(
@@ -353,7 +356,7 @@ async def ticket_panel(interaction: discord.Interaction):
             "**Zarząd**. Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Wybierz kategorię, która cię interesuje__"
         ),
-        color=0xffa500  # pomarańczowy
+        color=TICKET_COLOR
     )
 
     await interaction.response.send_message(embed=embed, view=TicketView())
