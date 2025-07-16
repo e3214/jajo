@@ -61,73 +61,79 @@ TICKET_CATEGORIES = {
         "label": "Zgłoś użytkownika",
         "description": "Kliknij jeśli chcesz zgłosić użytkownika",
         "emoji": "⚠️",
-        "color": 0xff4444,
+        "color": 0x2ecc40,  # zielony
         "longdesc": (
             "Witaj! Jeżeli chcesz zgłosić użytkownika łamiącego regulamin, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Opisz dokładnie sytuację i podaj nick osoby, którą zgłaszasz.__"
-        )
+        ),
+        "slug": "zglos_uzytkownika"
     },
     "backup": {
         "label": "Backup",
         "description": "Kliknij jeśli chcesz backup",
         "emoji": "💾",
-        "color": 0x4444ff,
+        "color": 0x2ecc40,
         "longdesc": (
             "Witaj! Jeżeli potrzebujesz backupu swojej działki, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Podaj nazwę działki i powód prośby o backup.__"
-        )
+        ),
+        "slug": "backup"
     },
     "forgot_password": {
         "label": "Zapomniane hasło",
         "description": "Kliknij jeśli chcesz odzyskać hasło",
         "emoji": "🔐",
-        "color": 0xffaa44,
+        "color": 0x2ecc40,
         "longdesc": (
             "Witaj! Jeżeli zapomniałeś hasła do konta, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Podaj swój nick oraz wszelkie informacje, które mogą pomóc w weryfikacji.__"
-        )
+        ),
+        "slug": "zapomniane_haslo"
     },
     "unban_appeal": {
         "label": "Odwołanie od kary",
         "description": "Kliknij jeśli chcesz się odwołać od kary",
         "emoji": "🛡️",
-        "color": 0x44ff44,
+        "color": 0x2ecc40,
         "longdesc": (
             "Witaj! Jeżeli chcesz się odwołać od bana lub mute, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Opisz powód odwołania i podaj swój nick.__"
-        )
+        ),
+        "slug": "odwolanie_od_kary"
     },
     "payment_issue": {
         "label": "Problem z płatnością",
         "description": "Kliknij jeśli masz problem z płatnością",
         "emoji": "💳",
-        "color": 0xff44ff,
+        "color": 0x2ecc40,
         "longdesc": (
             "Witaj! Jeżeli masz problem z płatnością lub zakupem, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Opisz dokładnie problem i podaj szczegóły transakcji.__"
-        )
+        ),
+        "slug": "problem_z_platnoscia"
     },
     "other": {
         "label": "Inne",
         "description": "Inne sprawy",
         "emoji": "❓",
-        "color": 0x888888,
+        "color": 0x2ecc40,
         "longdesc": (
             "Witaj! Jeżeli Twoja sprawa nie pasuje do żadnej z powyższych kategorii, wybierz tę opcję.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Opisz swój problem jak najdokładniej.__"
-        )
+        ),
+        "slug": "inne"
     }
 }
 
@@ -262,7 +268,7 @@ class TicketControls(discord.ui.View):
         embed = discord.Embed(
             title="🔒 Zamykanie Ticketu",
             description="Ticket zostanie zamknięty za 5 sekund...",
-            color=0xff0000
+            color=0xff0000  # czerwony
         )
         await interaction.response.send_message(embed=embed)
 
@@ -303,16 +309,17 @@ async def create_ticket(interaction: discord.Interaction, kategoria: str):
         role = interaction.guild.get_role(role_id)
         if role:
             overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    cat = TICKET_CATEGORIES[kategoria]
+    # Nazwa kanału: 🎫-(nick)-(kategoria)
     ticket_channel = await interaction.guild.create_text_channel(
-        name=f"ticket-{interaction.user.name}-{kategoria}",
+        name=f"🎫-{interaction.user.name}-{cat['slug']}",
         category=category,
         overwrites=overwrites
     )
-    cat = TICKET_CATEGORIES[kategoria]
     embed = discord.Embed(
         title=f"{cat['emoji']} {cat['label']}",
         description=cat['longdesc'],
-        color=cat['color'],
+        color=0x2ecc40,  # zielony
         timestamp=datetime.now()
     )
     embed.add_field(
@@ -339,7 +346,7 @@ async def ticket_panel(interaction: discord.Interaction):
             "**Zarząd**. Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
             "__Wybierz kategorię, która cię interesuje__"
         ),
-        color=0x0099ff
+        color=0x2ecc40  # zielony
     )
 
     await interaction.response.send_message(embed=embed, view=TicketView())
