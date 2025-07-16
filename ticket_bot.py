@@ -40,10 +40,10 @@ intents.guilds = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 CONFIG = {
-    "TICKET_CATEGORY_ID": 1386061124356804748,
-    "STAFF_ROLE_ID": 1386072963832352779,
+    "TICKET_CATEGORY_ID": 1386061124356804748,  # ID kategorii ticketów
+    "STAFF_ROLE_ID": 1386072963832352779,       # ID roli administracji
     "LOG_CHANNEL_ID": None,
-    "GUILD_ID": 1386058522030117004,
+    "GUILD_ID": 1386058522030117004,            # ID Twojego serwera
     "EXTRA_ROLES": [
         1386072859717144696,
         1386072749658603602,
@@ -54,6 +54,7 @@ CONFIG = {
 }
 
 REGULAMIN_CHANNEL_ID = 1386059827368955934  # ID kanału regulaminu
+POWITANIA_CHANNEL_ID = 1386060178348179486  # ID kanału powitań
 
 TICKET_CATEGORIES = {
     "report_user": {
@@ -68,7 +69,66 @@ TICKET_CATEGORIES = {
             "__Opisz dokładnie sytuację i podaj nick osoby, którą zgłaszasz.__"
         )
     },
-    # Dodaj pozostałe kategorie według potrzeb...
+    "backup": {
+        "label": "Backup",
+        "description": "Kliknij jeśli chcesz backup",
+        "emoji": "💾",
+        "color": 0x4444ff,
+        "longdesc": (
+            "Witaj! Jeżeli potrzebujesz backupu swojej działki, wybierz tę kategorię.\n\n"
+            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
+            "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
+            "__Podaj nazwę działki i powód prośby o backup.__"
+        )
+    },
+    "forgot_password": {
+        "label": "Zapomniane hasło",
+        "description": "Kliknij jeśli chcesz odzyskać hasło",
+        "emoji": "🔐",
+        "color": 0xffaa44,
+        "longdesc": (
+            "Witaj! Jeżeli zapomniałeś hasła do konta, wybierz tę kategorię.\n\n"
+            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
+            "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
+            "__Podaj swój nick oraz wszelkie informacje, które mogą pomóc w weryfikacji.__"
+        )
+    },
+    "unban_appeal": {
+        "label": "Odwołanie od kary",
+        "description": "Kliknij jeśli chcesz się odwołać od kary",
+        "emoji": "🛡️",
+        "color": 0x44ff44,
+        "longdesc": (
+            "Witaj! Jeżeli chcesz się odwołać od bana lub mute, wybierz tę kategorię.\n\n"
+            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
+            "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
+            "__Opisz powód odwołania i podaj swój nick.__"
+        )
+    },
+    "payment_issue": {
+        "label": "Problem z płatnością",
+        "description": "Kliknij jeśli masz problem z płatnością",
+        "emoji": "💳",
+        "color": 0xff44ff,
+        "longdesc": (
+            "Witaj! Jeżeli masz problem z płatnością lub zakupem, wybierz tę kategorię.\n\n"
+            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
+            "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
+            "__Opisz dokładnie problem i podaj szczegóły transakcji.__"
+        )
+    },
+    "other": {
+        "label": "Inne",
+        "description": "Inne sprawy",
+        "emoji": "❓",
+        "color": 0x888888,
+        "longdesc": (
+            "Witaj! Jeżeli Twoja sprawa nie pasuje do żadnej z powyższych kategorii, wybierz tę opcję.\n\n"
+            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
+            "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
+            "__Opisz swój problem jak najdokładniej.__"
+        )
+    }
 }
 
 def human_delta(delta):
@@ -119,10 +179,9 @@ async def on_member_join(member):
         return
     welcomed_users.add(member.id)
 
-    channel_id = 1386060178348179486
-    channel = member.guild.get_channel(channel_id)
+    channel = member.guild.get_channel(POWITANIA_CHANNEL_ID)
     if not channel:
-        print(f"Kanał o ID {channel_id} nie został znaleziony.")
+        print(f"Kanał o ID {POWITANIA_CHANNEL_ID} nie został znaleziony.")
         return
 
     now = datetime.now(timezone.utc)
@@ -165,18 +224,72 @@ async def send(interaction: discord.Interaction, message: str):
         message = message.replace(f":{emoji.name}:", str(emoji))
     await interaction.response.send_message(message)
 
-# --- SYSTEM TICKETÓW (przykład prosty, rozbuduj wg potrzeb) ---
-@bot.tree.command(name="ticket", description="Otwórz nowy ticket")
-@app_commands.describe(kategoria="Kategoria zgłoszenia")
-async def ticket(interaction: discord.Interaction, kategoria: str):
+# --- SYSTEM TICKETÓW Z PANELEM ---
+class TicketSelect(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label=cat["label"],
+                description=cat["description"],
+                emoji=cat["emoji"],
+                value=cat_id
+            )
+            for cat_id, cat in TICKET_CATEGORIES.items()
+        ]
+        super().__init__(
+            placeholder="Wybierz kategorię zgłoszenia...",
+            min_values=1,
+            max_values=1,
+            options=options
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        kategoria = self.values[0]
+        await create_ticket(interaction, kategoria)
+
+class TicketControls(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="🔒 Zamknij Ticket", style=discord.ButtonStyle.danger)
+    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        allowed_roles = [CONFIG["STAFF_ROLE_ID"]] + CONFIG["EXTRA_ROLES"]
+        user_roles = [role.id for role in getattr(interaction.user, 'roles', [])]
+        if not any(role_id in user_roles for role_id in allowed_roles) and interaction.user != interaction.guild.owner:
+            await interaction.response.send_message("❌ Tylko administracja może zamykać tickety!", ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            title="🔒 Zamykanie Ticketu",
+            description="Ticket zostanie zamknięty za 5 sekund...",
+            color=0xff0000
+        )
+        await interaction.response.send_message(embed=embed)
+
+        try:
+            await asyncio.sleep(5)
+            await interaction.channel.delete()
+        except Exception as e:
+            print(f"Błąd przy usuwaniu kanału: {e}")
+            try:
+                await interaction.followup.send("❌ Wystąpił błąd przy zamykaniu ticketu. Skontaktuj się z administratorem.", ephemeral=True)
+            except Exception as e2:
+                print(f"Błąd followup: {e2}")
+
+class TicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(TicketSelect())
+
+async def create_ticket(interaction: discord.Interaction, kategoria: str):
     if not interaction.guild:
         await interaction.response.send_message("Komenda tylko na serwerze.", ephemeral=True)
         return
     if kategoria not in TICKET_CATEGORIES:
         await interaction.response.send_message("Nieprawidłowa kategoria.", ephemeral=True)
         return
-    category = discord.utils.get(interaction.guild.categories, id=CONFIG["TICKET_CATEGORY_ID"])
-    if not category:
+    category = interaction.guild.get_channel(CONFIG["TICKET_CATEGORY_ID"])
+    if not category or not isinstance(category, discord.CategoryChannel):
         await interaction.response.send_message("Nie znaleziono kategorii ticketów.", ephemeral=True)
         return
     staff_role = interaction.guild.get_role(CONFIG["STAFF_ROLE_ID"])
@@ -186,13 +299,50 @@ async def ticket(interaction: discord.Interaction, kategoria: str):
     }
     if staff_role:
         overwrites[staff_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    for role_id in CONFIG["EXTRA_ROLES"]:
+        role = interaction.guild.get_role(role_id)
+        if role:
+            overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
     ticket_channel = await interaction.guild.create_text_channel(
-        name=f"ticket-{interaction.user.name}",
+        name=f"ticket-{interaction.user.name}-{kategoria}",
         category=category,
         overwrites=overwrites
     )
-    await ticket_channel.send(f"{interaction.user.mention}, Twój ticket został utworzony! {TICKET_CATEGORIES[kategoria]['longdesc']}")
-    await interaction.response.send_message(f"Ticket utworzony: {ticket_channel.mention}", ephemeral=True)
+    cat = TICKET_CATEGORIES[kategoria]
+    embed = discord.Embed(
+        title=f"{cat['emoji']} {cat['label']}",
+        description=cat['longdesc'],
+        color=cat['color'],
+        timestamp=datetime.now()
+    )
+    embed.add_field(
+        name="📋 Informacje",
+        value=f"**Użytkownik:** {interaction.user.mention}\n**Kategoria:** {cat['label']}\n**ID:** {interaction.user.id}",
+        inline=False
+    )
+    embed.set_footer(text="Aby zamknąć ticket, kliknij przycisk poniżej")
+    view = TicketControls()
+    await ticket_channel.send(embed=embed, view=view)
+    await interaction.response.send_message(f"✅ Stworzono ticket! {ticket_channel.mention}", ephemeral=True)
+
+@bot.tree.command(name="ticket-panel", description="Stwórz panel do tworzenia ticketów")
+async def ticket_panel(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.manage_channels:
+        await interaction.response.send_message("❌ Nie masz uprawnień!", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title="TICKETY",
+        description=(
+            "Witaj, jeżeli potrzebujesz pomocy od naszego zespołu administracji, to wybierz interesującą ciebie kategorię!\n\n"
+            "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
+            "**Zarząd**. Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
+            "__Wybierz kategorię, która cię interesuje__"
+        ),
+        color=0x0099ff
+    )
+
+    await interaction.response.send_message(embed=embed, view=TicketView())
 
 # --- READY ---
 @bot.event
