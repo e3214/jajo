@@ -81,7 +81,7 @@ TICKET_CATEGORIES = {
             "Witaj! Jeżeli potrzebujesz backupu swojej działki, wybierz tę kategorię.\n\n"
             "**Cierpliwość.** Prosimy cierpliwie czekać, nie tylko ty czekasz na pomoc. Maksymalny czas na sprawdzenie zgłoszenia to 72h!\n"
             "**Zarząd.** Nie oznaczaj zarządu (Właścicieli/Developerów). Jedyne osoby, które mogą oznaczać zarząd to administracja!\n\n"
-            "__Podaj nazwę działki i powód prośby o backup.__"
+            "__Podaj powód backupa.__"
         ),
         "slug": "backup"
     },
@@ -141,8 +141,10 @@ TICKET_CATEGORIES = {
 
 def human_delta(delta):
     hours = int(delta.total_seconds() // 3600)
-    if hours == 1:
-        return "1 godzina temu"
+    if hours < 1:
+        return "mniej niż godzinę temu"
+    elif hours == 1:
+        return "1 godzinę temu"
     else:
         return f"{hours} godzin temu"
 
@@ -170,7 +172,7 @@ def make_powitanie_text(joined_delta, created_delta, member_count):
     return (
         f"ᴡɪᴛᴀᴍʏ ɴᴀ ᴏꜰɪᴄᴊᴀʟɴʏᴍ ᴅɪꜱᴄᴏʀᴅᴢɪᴇ ᴘᴏᴍᴀʀᴀɴᴄᴢᴄʀᴀꜰᴛ\n"
         f"ᴘᴀᴍɪᴇᴛᴀᴊ ᴀʙʏ ᴘʀᴢᴇᴄᴢʏᴛᴀć <#{REGULAMIN_CHANNEL_ID}> 🦺\n"
-        f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴊ!\n\n"
+        f"ᴍᴀᴍʏ ɴᴀᴅᴢɪᴇᴊᴇ, ᴢ̇ᴇ ᴢᴏꜱᴛᴀɴɪᴇꜱᴢ ᴢ ɴᴀᴍɪ ɴᴀ ᴅᴌᴜᴢ̇ᴇᴇᴊ!\n\n"
         f"`⏰` Dołączono na serwer: `{human_delta(joined_delta)}`\n"
         f"`📅` Konto zostało stworzone: `{human_created(created_delta)}`\n\n"
         f"`👤`  ᴀᴋᴛᴜᴀʟɴɪᴇ ɴᴀ ꜱᴇʀᴡᴇʀᴢᴇ ᴘᴏꜱɪᴀᴅᴀᴍʏ {member_count} ᴏꜱᴏ́ʙ"
